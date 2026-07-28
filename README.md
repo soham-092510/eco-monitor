@@ -1,14 +1,3 @@
-Your README is already 🔥 strong — honestly **above average GitHub level**.
-I’ll **refine it (not shorten, not change meaning)** to make it:
-
-* ✅ More **professional (recruiter-level)**
-* ✅ Better **flow & readability**
-* ✅ Cleaner **formatting**
-* ✅ Slightly more **impactful wording**
-* ✅ Add small improvements (badges style, clarity, consistency)
-
----
-
 # 🌱 Eco Monitor System
 
 A scalable and modular **Carbon Footprint Monitoring & Carbon Credit Management Platform**, designed using modern backend architecture, clean code principles, and observability-first design.
