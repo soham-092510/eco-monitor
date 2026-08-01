@@ -1,0 +1,125 @@
+# Define Docker Compose version
+# WHY:
+# - Specifies which features and syntax are supported
+# - 3.9 is stable and commonly used
+version: "3.9"
+
+
+# Define all services (containers)
+# WHY:
+# - Each service = one container (DB, cache, backend, etc.)
+services:
+
+
+  # ------------------ PostgreSQL Database ------------------
+  postgres:
+
+    # Use official PostgreSQL image (version 16)
+    # WHY:
+    # - Prebuilt DB image maintained by Docker Hub
+    image: postgres:16
+
+    # Custom container name
+    # WHY:
+    # - Easier to identify/manage container
+    container_name: gf_postgres
+
+    # Environment variables for DB setup
+    # WHY:
+    # - Automatically creates user, password, and database
+    environment:
+      POSTGRES_USER: gf_user
+      POSTGRES_PASSWORD: gf_password
+      POSTGRES_DB: green_finance
+
+    # Port mapping
+    # WHY:
+    # - Exposes container DB to host machine
+    # - host:container → 5432:5432
+    ports:
+      - "5432:5432"
+
+    # Persistent storage
+    # WHY:
+    # - Prevents data loss when container stops
+    # - Stores DB data outside container
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+    # Health check
+    # WHY:
+    # - Ensures DB is ready before backend connects
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U gf_user"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+
+  # ------------------ Redis Cache ------------------
+  redis:
+
+    # Use lightweight Redis image
+    # WHY:
+    # - Alpine version is smaller and faster
+    image: redis:7-alpine
+
+    # Custom container name
+    container_name: gf_redis
+
+    # Port mapping
+    # WHY:
+    # - Allows backend (and host) to access Redis
+    ports:
+      - "6379:6379"
+
+
+  # ------------------ Backend (FastAPI App) ------------------
+  backend:
+
+    # Build Docker image from your project
+    # WHY:
+    # - Uses your custom Dockerfile to build app image
+    build:
+      context: ..                # Root of project
+      dockerfile: docker/Dockerfile  # Path to Dockerfile
+
+    # Custom container name
+    container_name: gf_backend
+
+    # Load environment variables from .env file
+    # WHY:
+    # - Keeps secrets/config outside code
+    env_file:
+      - ../.env
+
+    # Port mapping
+    # WHY:
+    # - Exposes FastAPI app to browser
+    ports:
+      - "8000:8000"
+
+    # Dependency control
+    # WHY:
+    # - Ensures services start in correct order
+    depends_on:
+      postgres:
+        condition: service_healthy   # Wait until DB is ready
+      redis:
+        condition: service_started   # Wait until Redis starts
+
+    # Mount local code into container
+    # WHY:
+    # - Enables live code changes (no rebuild needed)
+    volumes:
+      - ../backend:/app/backend
+
+
+# ------------------ Volumes ------------------
+
+# Define named volume
+# WHY:
+# - Used for persistent DB storage
+# - Managed by Docker
+volumes:
+  postgres_data:
