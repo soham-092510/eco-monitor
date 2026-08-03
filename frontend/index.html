@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Eco Monitor | Carbon Footprint Dashboard</title>
+  <meta name="description" content="Track carbon emissions, manage carbon credits, and monitor sustainability metrics." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <!-- ===== AUTH PAGE ===== -->
+  <div id="auth-page" class="auth-page">
+    <div class="auth-left">
+      <div class="auth-brand">
+        <span class="brand-icon">🌱</span>
+        <span class="brand-name">Eco Monitor</span>
+      </div>
+      <h1>Carbon Footprint<br/>Monitoring Platform</h1>
+      <p>Track emissions, manage carbon credits, and monitor your sustainability journey — all in one place.</p>
+      <div class="auth-stats">
+        <div class="auth-stat"><span>🌍</span><strong>Carbon Tracking</strong></div>
+        <div class="auth-stat"><span>💳</span><strong>Credit Management</strong></div>
+        <div class="auth-stat"><span>📊</span><strong>Portfolio Analytics</strong></div>
+      </div>
+    </div>
+    <div class="auth-right">
+      <div class="auth-card">
+        <div class="auth-tabs">
+          <button
+type="button"
+class="tab-btn active"
+id="login-tab"
+onclick="switchTab('login')">Login</button>
+          <button
+type="button"
+class="tab-btn"
+id="register-tab"
+onclick="switchTab('register')">Register</button>
+        </div>
+
+        <!-- Login Form -->
+        <form id="login-form" class="auth-form" onsubmit="handleLogin(event)">
+          <div class="form-group">
+            <label>Username</label>
+            <input type="text" id="login-username" placeholder="Enter your username" required />
+          </div>
+          <div class="form-group">
+            <label>Password</label>
+            <input type="password" id="login-password" placeholder="Enter your password" required />
+          </div>
+          <div id="login-error" class="form-error hidden"></div>
+          <button type="submit" class="btn-primary" id="login-btn">Login</button>
+        </form>
+
+        <!-- Register Form -->
+        <form id="register-form" class="auth-form hidden" onsubmit="handleRegister(event)">
+          <div class="form-group">
+            <label>Full Name</label>
+            <input type="text" id="reg-name" placeholder="Your full name" required />
+          </div>
+          <div class="form-group">
+            <label>Username</label>
+            <input type="text" id="reg-username" placeholder="Choose a username" required />
+          </div>
+          <div class="form-group">
+            <label>Email</label>
+            <input type="email" id="reg-email" placeholder="Your email address" required />
+          </div>
+          <div class="form-group">
+            <label>Password</label>
+            <input type="password" id="reg-password" placeholder="Choose a password" required />
+          </div>
+          <div id="register-error" class="form-error hidden"></div>
+          <button type="submit" class="btn-primary" id="register-btn">Create Account</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== DASHBOARD PAGE ===== -->
+  <div id="dashboard-page" class="dashboard hidden">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <span>🌱</span>
+        <span>Eco Monitor</span>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="#"
+   class="nav-item active"
+   onclick="event.preventDefault(); showSection('overview', this)">
+          <span class="nav-icon">📊</span> Overview
+        </a>
+       <a href="#"
+   class="nav-item"
+   onclick="event.preventDefault(); showSection('carbon', this)">
+          <span class="nav-icon">🌍</span> Carbon Tracker
+        </a>
+        <a href="#"
+   class="nav-item"
+   onclick="event.preventDefault(); showSection('credits', this)">
+          <span class="nav-icon">💳</span> Credits
+        </a>
+        <a href="#"
+   class="nav-item"
+   onclick="event.preventDefault(); showSection('ledger', this)">
+          <span class="nav-icon">📒</span> Ledger
+        </a>
+        <a href="#"
+   class="nav-item"
+   onclick="event.preventDefault(); showSection('portfolio', this)">
+          <span class="nav-icon">📈</span> Portfolio
+        </a>
+      </nav>
+      <div class="sidebar-footer">
+        <button
+type="button"
+class="btn-logout"
+onclick="logout()">🚪 Logout</button>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <header class="topbar">
+        <div>
+          <h2 id="section-title">Overview</h2>
+          <p id="section-subtitle">Welcome back! Here's your sustainability summary.</p>
+        </div>
+        <div class="topbar-user">
+          <div class="user-avatar" id="user-initial">U</div>
+          <span id="topbar-username">User</span>
+        </div>
+      </header>
+
+      <!-- ===== OVERVIEW SECTION ===== -->
+      <section id="section-overview" class="section">
+        <div class="stats-grid">
+          <div class="stat-card green">
+            <div class="stat-icon">🌍</div>
+            <div class="stat-info">
+              <p>Total Emissions</p>
+              <h3 id="stat-emissions">--</h3>
+              <span>kg CO₂</span>
+            </div>
+          </div>
+          <div class="stat-card blue">
+            <div class="stat-icon">💳</div>
+            <div class="stat-info">
+              <p>Carbon Credits</p>
+              <h3 id="stat-credits">--</h3>
+              <span>credits</span>
+            </div>
+          </div>
+          <div class="stat-card amber">
+            <div class="stat-icon">📒</div>
+            <div class="stat-info">
+              <p>Transactions</p>
+              <h3 id="stat-transactions">--</h3>
+              <span>total</span>
+            </div>
+          </div>
+          <div class="stat-card purple">
+            <div class="stat-icon">📈</div>
+            <div class="stat-info">
+              <p>Net Balance</p>
+              <h3 id="stat-balance">--</h3>
+              <span>credits</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="charts-row">
+          <div class="chart-card">
+            <h3>Emissions Over Time</h3>
+            <canvas id="emissionsChart" height="200"></canvas>
+          </div>
+          <div class="chart-card">
+            <h3>Credit Distribution</h3>
+            <canvas id="creditsChart" height="200"></canvas>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== CARBON TRACKER SECTION ===== -->
+      <section id="section-carbon" class="section hidden">
+        <div class="section-toolbar">
+          <h3>Carbon Emission Records</h3>
+          <button class="btn-add" onclick="toggleAddCarbon()">+ Add Record</button>
+        </div>
+
+        <!-- Search Carbon Records -->
+<div style="margin-bottom:15px;">
+    <input
+        type="text"
+        id="carbon-search"
+        placeholder="🔍 Search Carbon Records..."
+        onkeyup="searchCarbon()"
+        style="
+            width:100%;
+            padding:10px;
+            border:1px solid #ccc;
+            border-radius:8px;
+        ">
+</div>
+
+        <!-- Add Carbon Form -->
+        <div id="add-carbon-form" class="inline-form hidden">
+          <form onsubmit="handleAddCarbon(event)">
+            <div class="form-row">
+              <div class="form-group">
+                <label>Activity Type</label>
+                <select id="carbon-activity">
+                  <option value="transport">Transport</option>
+                  <option value="energy">Energy</option>
+                  <option value="manufacturing">Manufacturing</option>
+                  <option value="agriculture">Agriculture</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Emission Amount (kg CO₂)</label>
+                <input type="number" id="carbon-amount" placeholder="e.g. 25.5" step="0.01" required />
+              </div>
+              <div class="form-group">
+                <label>Description</label>
+                <input type="text" id="carbon-desc" placeholder="Brief description" />
+              </div>
+              <div class="form-actions">
+                <button type="submit" class="btn-primary small">Save</button>
+                <button type="button" class="btn-cancel" onclick="toggleAddCarbon()">Cancel</button>
+              </div>
+            </div>
+          </form>
+        </div>
+
+        <div class="table-wrapper">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Activity</th>
+                <th>Amount (kg CO₂)</th>
+                <th>Description</th>
+                <th>Date</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="carbon-table-body">
+              <tr><td colspan="6" class="empty-row">Loading...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ===== CREDITS SECTION ===== -->
+      <section id="section-credits" class="section hidden">
+        <div class="section-toolbar">
+          <h3>Carbon Credits</h3>
+        </div>
+        <div class="table-wrapper">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Credit Type</th>
+                <th>Amount</th>
+                <th>Source</th>
+                <th>Date</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="credits-table-body">
+              <tr><td colspan="6" class="empty-row">Loading...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ===== LEDGER SECTION ===== -->
+      <section id="section-ledger" class="section hidden">
+        <div class="section-toolbar">
+          <h3>Transaction Ledger</h3>
+        </div>
+        <div class="table-wrapper">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Type</th>
+                <th>Amount</th>
+                <th>Description</th>
+                <th>Date</th>
+                <th>Balance</th>
+              </tr>
+            </thead>
+            <tbody id="ledger-table-body">
+              <tr><td colspan="6" class="empty-row">Loading...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ===== PORTFOLIO SECTION ===== -->
+      <section id="section-portfolio" class="section hidden">
+        <div class="section-toolbar">
+          <h3>My Portfolio</h3>
+        </div>
+        <div id="portfolio-content">
+          <div class="portfolio-grid">
+            <div class="portfolio-card">
+              <h4>Total Emissions</h4>
+              <p id="port-emissions">--</p>
+              <span>kg CO₂ tracked</span>
+            </div>
+            <div class="portfolio-card">
+              <h4>Credits Earned</h4>
+              <p id="port-credits">--</p>
+              <span>carbon credits</span>
+            </div>
+            <div class="portfolio-card">
+              <h4>Net Position</h4>
+              <p id="port-net">--</p>
+              <span>net credits</span>
+            </div>
+            <div class="portfolio-card">
+              <h4>Sustainability Score</h4>
+              <p id="port-score">--</p>
+              <span>out of 100</span>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
