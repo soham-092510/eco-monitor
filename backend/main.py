@@ -51,10 +51,15 @@ from backend.middleware.error_handler import (
 from backend.db.database import init_db
 
 
-# Import API routes (health check)
+# Import API routes
 # WHY:
-# - Keeps routes modular and clean
-from backend.api import health
+# - Importing all controllers to register their endpoint pathways
+from backend.api import health, auth, user, carbon, credits, ledger, portfolio
+
+# Import CORS middleware
+# WHY:
+# - Required to allow frontend clients from other domains or origins to call our API
+from fastapi.middleware.cors import CORSMiddleware
 
 
 # Create FastAPI app instance
@@ -68,6 +73,18 @@ app = FastAPI(
 
 
 # ------------------ Middleware ------------------
+
+# Add CORS middleware
+# WHY:
+# - Permits web page scripts running on other hosts to read resources from this API
+# - Allows frontend running on different ports or file systems to communicate successfully
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allows all origins in development
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all standard methods (GET, POST, etc.)
+    allow_headers=["*"],  # Allows all headers (Authorization, Content-Type)
+)
 
 # Add logging middleware
 # WHY:
@@ -89,10 +106,16 @@ app.add_exception_handler(Exception, unhandled_exception_handler)
 
 # ------------------ Routes ------------------
 
-# Include health check routes
+# Include routes
 # WHY:
-# - Keeps API modular (routes separated into files)
+# - Registers sub-routers on the central app router
 app.include_router(health.router)
+app.include_router(auth.router)
+app.include_router(user.router)
+app.include_router(carbon.router)
+app.include_router(credits.router)
+app.include_router(ledger.router)
+app.include_router(portfolio.router)
 
 
 # ------------------ Monitoring ------------------

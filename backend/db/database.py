@@ -30,3 +30,14 @@ def init_db() -> None:
     # - create_all() scans them and creates missing tables in the DB
     # - bind=engine tells SQLAlchemy which database to use
     Base.metadata.create_all(bind=engine)
+
+    # Automatically seed the database on startup
+    # WHY:
+    # - Ensures default emission factors and demo portfolios are preloaded for immediate visualization
+    from backend.db.session import SessionLocal
+    from backend.db.seed import seed_database
+    db = SessionLocal()
+    try:
+        seed_database(db)
+    finally:
+        db.close()

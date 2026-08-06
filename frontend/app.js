@@ -448,16 +448,24 @@ async function loadCredits() {
       return;
     }
 
-    tbody.innerHTML = records.map((r, i) => `
-      <tr>
-        <td>${i + 1}</td>
-        <td>${r.credit_type || r.type || 'Standard'}</td>
-        <td><strong>${(r.amount || r.credit_amount || 0).toFixed(2)}</strong></td>
-        <td>${r.source || r.origin || '—'}</td>
-        <td>${formatDate(r.created_at || r.date)}</td>
-        <td><span class="badge badge-blue">Active</span></td>
-      </tr>
-    `).join('');
+    tbody.innerHTML = records.map((r, i) => {
+      const isActive = (r.status || '').toLowerCase() === 'active';
+      const actionsHtml = isActive
+        ? `<button class="action-btn btn-transfer-action" onclick="openTransferModal('${r.id}')">Transfer</button>
+           <button class="action-btn btn-retire-action" onclick="openRetireModal('${r.id}')">Retire</button>`
+        : `—`;
+      return `
+        <tr>
+          <td>${i + 1}</td>
+          <td>${r.credit_type || r.type || 'Standard'}</td>
+          <td><strong>${(r.amount || r.credit_amount || 0).toFixed(2)}</strong></td>
+          <td>${r.source || r.origin || '—'}</td>
+          <td>${formatDate(r.created_at || r.date)}</td>
+          <td><span class="badge ${isActive ? 'badge-blue' : 'badge-green'}">${(r.status || 'Active').toUpperCase()}</span></td>
+          <td>${actionsHtml}</td>
+        </tr>
+      `;
+    }).join('');
   } catch (err) {
     tbody.innerHTML = `<tr><td colspan="6" class="empty-row">Could not load credits: ${err.message}</td></tr>`;
   }
@@ -585,4 +593,72 @@ function searchCarbon(){
 
     });
 
+}
+
+// ===========================
+// MODALS FOR CREDIT ACTIONS
+// ===========================
+
+function openTransferModal(creditId) {
+  document.getElementById('transfer-credit-id').value = creditId;
+  document.getElementById('transfer-recipient').value = '';
+  document.getElementById('transfer-amount').value = '';
+  document.getElementById('transfer-modal').classList.remove('hidden');
+}
+
+function openRetireModal(creditId) {
+  document.getElementById('retire-credit-id').value = creditId;
+  document.getElementById('retire-amount').value = '';
+  document.getElementById('retire-notes').value = '';
+  document.getElementById('retire-modal').classList.remove('hidden');
+}
+
+function closeModal(modalId) {
+  document.getElementById(modalId).classList.add('hidden');
+}
+
+async function handleTransferSubmit(e) {
+  e.preventDefault();
+  const creditId = document.getElementById('transfer-credit-id').value;
+  const recipient = document.getElementById('transfer-recipient').value;
+  const amount = parseFloat(document.getElementById('transfer-amount').value);
+  try {
+    await apiFetch('/credits/transfer', {
+      method: 'POST',
+      body: JSON.stringify({
+        carbon_credit_id: creditId,
+        recipient_username: recipient,
+        amount: amount
+      })
+    });
+    closeModal('transfer-modal');
+    showToast("Carbon credit transferred successfully!");
+    loadCredits();
+    loadOverview();
+  } catch (err) {
+    showToast(err.message, "error");
+  }
+}
+
+async function handleRetireSubmit(e) {
+  e.preventDefault();
+  const creditId = document.getElementById('retire-credit-id').value;
+  const amount = parseFloat(document.getElementById('retire-amount').value);
+  const notes = document.getElementById('retire-notes').value;
+  try {
+    await apiFetch('/credits/retire', {
+      method: 'POST',
+      body: JSON.stringify({
+        carbon_credit_id: creditId,
+        amount: amount,
+        notes: notes
+      })
+    });
+    closeModal('retire-modal');
+    showToast("Carbon credit retired successfully!");
+    loadCredits();
+    loadOverview();
+  } catch (err) {
+    showToast(err.message, "error");
+  }
 }

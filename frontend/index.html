@@ -273,6 +273,7 @@ onclick="logout()">🚪 Logout</button>
                 <th>Source</th>
                 <th>Date</th>
                 <th>Status</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody id="credits-table-body">
@@ -337,6 +338,49 @@ onclick="logout()">🚪 Logout</button>
         </div>
       </section>
     </main>
+  </div>
+
+  <!-- ===== MODAL WINDOWS FOR CREDIT ACTIONS ===== -->
+  <div id="transfer-modal" class="modal hidden">
+    <div class="modal-content">
+      <h3>Transfer Carbon Credits</h3>
+      <form onsubmit="handleTransferSubmit(event)">
+        <input type="hidden" id="transfer-credit-id" />
+        <div class="form-group">
+          <label>Recipient Username</label>
+          <input type="text" id="transfer-recipient" required placeholder="Enter username" />
+        </div>
+        <div class="form-group">
+          <label>Amount (tonnes)</label>
+          <input type="number" id="transfer-amount" required step="0.01" min="0.01" placeholder="0.00" />
+        </div>
+        <div class="modal-actions">
+          <button type="submit" class="btn-primary small">Transfer</button>
+          <button type="button" class="btn-cancel" onclick="closeModal('transfer-modal')">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="retire-modal" class="modal hidden">
+    <div class="modal-content">
+      <h3>Retire Carbon Credits</h3>
+      <form onsubmit="handleRetireSubmit(event)">
+        <input type="hidden" id="retire-credit-id" />
+        <div class="form-group">
+          <label>Amount to Retire (tonnes)</label>
+          <input type="number" id="retire-amount" required step="0.01" min="0.01" placeholder="0.00" />
+        </div>
+        <div class="form-group">
+          <label>Notes / Audit Details</label>
+          <input type="text" id="retire-notes" placeholder="e.g. Offset transport footprint" />
+        </div>
+        <div class="modal-actions">
+          <button type="submit" class="btn-primary small">Retire</button>
+          <button type="button" class="btn-cancel" onclick="closeModal('retire-modal')">Cancel</button>
+        </div>
+      </form>
+    </div>
   </div>
 
   <script src="app.js"></script>
