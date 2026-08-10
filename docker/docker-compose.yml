@@ -118,7 +118,6 @@ services:
 # ------------------ Volumes ------------------
 
 # Define named volume
-# WHY:
 # - Used for persistent DB storage
 # - Managed by Docker
 volumes:
