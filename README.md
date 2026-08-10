@@ -281,7 +281,6 @@ eco-monitor/
         test_carbon.py           # Carbon logic tests
 ```
 
-*(Detailed structure explained above in architecture section)*
 
 ---
 
