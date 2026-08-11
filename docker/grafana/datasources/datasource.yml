@@ -1,0 +1,19 @@
+# =========================================================
+# GRAFANA PROMETHEUS DATA SOURCE
+apiVersion: 1
+
+datasources:
+
+  - name: Prometheus
+
+    type: prometheus
+
+    access: proxy
+
+    # "prometheus" is the Docker Compose service name.
+    url: http://prometheus:9090
+
+    # Make Prometheus the default Grafana data source.
+    isDefault: true
+
+    editable: true
