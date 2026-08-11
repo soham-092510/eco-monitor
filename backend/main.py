@@ -1,114 +1,113 @@
-# Import FastAPI framework
-# WHY:
-# - Core framework used to build your API
+# =====================================================================
+# ECO MONITOR — MAIN.PY (APPLICATION ENTRY POINT)
+# =====================================================================
+# Purpose/Existence of this file:
+# This file is the "Main Switchboard" and starter engine of our entire project.
+# Think of it like a train station manager. It initializes the FastAPI server,
+# hooks up security layers (CORS), configures error reporting sheets, loads all 
+# route path controllers (like /auth, /credits, /telemetry), and handles the 
+# database table initialization on system startup.
+# =====================================================================
+
+# 🔹 Import FastAPI
+# FastAPI is the core framework library used to construct modern Python APIs.
+# It acts like the building foundation structure for our web servers.
 from fastapi import FastAPI
 
-
-# Import HTTP exception from Starlette (base framework of FastAPI)
-# WHY:
-# - Used for handling standard HTTP errors (404, 401, etc.)
+# 🔹 Import StarletteHTTPException
+# Starlette is the lightweight engine under the hood of FastAPI. We import its 
+# exception class to intercept standard web navigation errors (like 404 Not Found).
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
-
-# Import validation error exception
-# WHY:
-# - Triggered when request data fails validation (Pydantic)
+# 🔹 Import RequestValidationError
+# Triggered automatically when incoming request forms or JSON variables are missing 
+# or formatted incorrectly (e.g. text entered where a number was required).
 from fastapi.exceptions import RequestValidationError
 
-
-# Import Prometheus instrumentator
-# WHY:
-# - Adds monitoring metrics (request count, latency, etc.)
-# - Useful for production monitoring (DevOps / observability)
+# 🔹 Import Instrumentator
+# Exposes request metrics to Prometheus so we can monitor server performance, 
+# query latency, and traffic in Grafana.
 from prometheus_fastapi_instrumentator import Instrumentator
 
-
-# Import application settings
-# WHY:
-# - Centralized configuration (app name, DB URL, etc.)
+# 🔹 Import settings
+# The global configuration settings loaded from config.py.
 from backend.core.config import settings
 
-
-# Import logging middleware
-# WHY:
-# - Logs every request automatically
+# 🔹 Import LoggingMiddleware
+# An interceptor that records the timestamp, visitor IP, and response time of every request.
 from backend.middleware.logging_middleware import LoggingMiddleware
 
-
-# Import custom error handlers
-# WHY:
-# - Ensures consistent error responses across the API
+# 🔹 Import custom error handlers
+# Error handlers intercept crashes and translate them into friendly JSON error statements
+# instead of crashing the visitor's screen.
 from backend.middleware.error_handler import (
     http_exception_handler,
     validation_exception_handler,
     unhandled_exception_handler,
 )
 
-
-# Import DB initialization function
-# WHY:
-# - Creates tables automatically on startup (dev only)
+# 🔹 Import init_db
+# The function that builds SQL database tables based on our ORM models.
 from backend.db.database import init_db
 
+# 🔹 Import API routers
+# Registers the different pages/sections of our application.
+from backend.api import health, auth, user, carbon, credits, ledger, portfolio, telemetry
 
-# Import API routes
-# WHY:
-# - Importing all controllers to register their endpoint pathways
-from backend.api import health, auth, user, carbon, credits, ledger, portfolio
-
-# Import CORS middleware
-# WHY:
-# - Required to allow frontend clients from other domains or origins to call our API
+# 🔹 Import CORSMiddleware
+# CORS (Cross-Origin Resource Sharing) is a browser security mechanism.
+# We import this to control which websites are allowed to dial our backend (e.g. allowing
+# our HTML/JS frontend to fetch carbon statistics).
 from fastapi.middleware.cors import CORSMiddleware
 
 
-# Create FastAPI app instance
-# WHY:
-# - This is the main application object
-# - title/version used in Swagger docs
+# 🔹 Create FastAPI application instance
+# We configure title from Settings class and set version to 1.0.0.
+# This variable "app" is what uvicorn runs.
 app = FastAPI(
     title=settings.app_name,
     version="1.0.0"
 )
 
 
-# ------------------ Middleware ------------------
+# =====================================================================
+# 🛡️ MIDDLEWARE INSTALLATION
+# =====================================================================
 
-# Add CORS middleware
-# WHY:
-# - Permits web page scripts running on other hosts to read resources from this API
-# - Allows frontend running on different ports or file systems to communicate successfully
+# 1. CORS Guard Middleware
+# We configure it to allow any domain client ("*") to access endpoints during development.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allows all origins in development
+    allow_origins=["*"],
     allow_credentials=True,
-    allow_methods=["*"],  # Allows all standard methods (GET, POST, etc.)
-    allow_headers=["*"],  # Allows all headers (Authorization, Content-Type)
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
-# Add logging middleware
-# WHY:
-# - Logs every request (method, path, duration, status)
+# 2. Performance & Access Logger Middleware
+# Tracks duration of every request.
 app.add_middleware(LoggingMiddleware)
 
 
-# ------------------ Exception Handlers ------------------
+# =====================================================================
+# 🚨 ERROR EXCEPTION INTERCEPTORS
+# =====================================================================
 
-# Handle HTTP errors (404, 401, etc.)
+# Catch HTTP exceptions (like 404, 401)
 app.add_exception_handler(StarletteHTTPException, http_exception_handler)
 
-# Handle validation errors (422)
+# Catch field validation errors (422)
 app.add_exception_handler(RequestValidationError, validation_exception_handler)
 
-# Handle all unexpected errors (500)
+# Catch unexpected internal crashes (500)
 app.add_exception_handler(Exception, unhandled_exception_handler)
 
 
-# ------------------ Routes ------------------
+# =====================================================================
+# 🚪 PATHWAY ROUTE REGISTRATIONS
+# =====================================================================
 
-# Include routes
-# WHY:
-# - Registers sub-routers on the central app router
+# Hook up sub-controllers onto our central app switchboard
 app.include_router(health.router)
 app.include_router(auth.router)
 app.include_router(user.router)
@@ -116,26 +115,47 @@ app.include_router(carbon.router)
 app.include_router(credits.router)
 app.include_router(ledger.router)
 app.include_router(portfolio.router)
+app.include_router(telemetry.router) # Registers the new Kepler PromQL telemetry pathways
 
 
-# ------------------ Monitoring ------------------
+# =====================================================================
+# 📊 PROMETHEUS INSTRUMENTATION
+# =====================================================================
 
-# Enable Prometheus metrics endpoint
-# WHY:
-# - Tracks API performance (latency, request count, etc.)
-# - Exposes metrics at /metrics endpoint
+# Exposes Prometheus tracking metrics under "/metrics" endpoint
 Instrumentator().instrument(app).expose(app)
 
 
-# ------------------ Startup Event ------------------
+# =====================================================================
+# ⚙️ STARTUP EVENT LOGIC
+# =====================================================================
 
-# Run code when app starts
-# WHY:
-# - Used to initialize resources (like DB tables)
+# Runs automatically when the server is powered up.
 @app.on_event("startup")
 def on_startup():
-
-    # Initialize database
-    # WHY:
-    # - Creates tables automatically (development only)
+    # Automatically creates all database tables (User, Accounts, CarbonCredit, Ledger)
+    # and populates them with seed demo data on local development SQLite database.
     init_db()
+
+
+# =====================================================================
+# 🕸️ CONNECTIONS & WORKFLOW (How this file communicates with others):
+# =====================================================================
+# 1. BOOTED BY:
+#    - Uvicorn server launcher: Run via `uvicorn backend.main:app` or Docker.
+#
+# 2. LOADS CONFIGURATION:
+#    - [config.py](file:///c:/Users/HP/Downloads/Projects/eco-monitor/backend/core/config.py):
+#      Reads `settings.app_name` to define application metadata.
+#
+# 3. CONTEXTS ERROR HANDLERS:
+#    - [error_handler.py](file:///c:/Users/HP/Downloads/Projects/eco-monitor/backend/middleware/error_handler.py)
+#
+# 4. INITIALIZES STORAGE DATABASE:
+#    - [database.py](file:///c:/Users/HP/Downloads/Projects/eco-monitor/backend/db/database.py):
+#      Calls `init_db()` to run schemas check on SQLite database engine.
+#
+# 5. EXPANDS ACCESS ROUTERS:
+#    - Registers [telemetry.py](file:///c:/Users/HP/Downloads/Projects/eco-monitor/backend/api/telemetry.py)
+#      and other APIs, mapping them to the server web paths.
+# =====================================================================

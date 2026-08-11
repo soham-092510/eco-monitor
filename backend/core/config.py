@@ -1,89 +1,119 @@
-# Import BaseSettings from pydantic_settings
-# WHY:
-# - This allows us to automatically read environment variables (from .env file or system)
-# - Converts them into Python variables with type validation
-# - Helps avoid hardcoding secrets like DB URL, JWT keys
+# =====================================================================
+# ECO MONITOR — CONFIG.PY (CONFIGURATION SETTINGS)
+# =====================================================================
+# Purpose/Existence of this file:
+# This file acts as the "Brain of Settings" for the entire project.
+# Imagine a physical device where you have knobs, sliders, and dials. This file
+# is where we name and validate all those knobs (like the database URL, secrets, etc.)
+# so that the rest of the application can simply read them from here instead of 
+# searching all over the place. It loads variables from a hidden file called ".env".
+# =====================================================================
+
+# 🔹 Import BaseSettings
+# BaseSettings is a pre-built tool from the "pydantic-settings" library.
+# It acts like a smart template that automatically looks at your computer's 
+# environment variables (or a secret text file called ".env") and fills in the values for us.
 from pydantic_settings import BaseSettings
 
+# 🔹 Import model_validator
+# model_validator is a validation tool from the "pydantic" library.
+# It acts like a security guard that double-checks the final values of our settings
+# after they are loaded, making sure everything is correct and making adjustments if needed.
+from pydantic import model_validator
 
-# Define a Settings class that will hold ALL configuration of the app
-# WHY:
-# - Central place for configuration (single source of truth)
-# - Easy to import anywhere in the project
-# - Keeps code clean and maintainable
+
+# 🔹 Define the Settings class
+# A "class" is like a blueprints sketch. Here, we outline the name and type of every single 
+# configuration parameter our app needs to run.
 class Settings(BaseSettings):
 
-    # Application name
-    # WHY:
-    # - Used in FastAPI title, logging, monitoring, etc.
-    # - Default value provided in case not defined in .env
+    # app_name (Text/String type)
+    # The name of our application. If not set, it defaults to "green-finance".
     app_name: str = "green-finance"
 
-    # Environment type (development, staging, production)
-    # WHY:
-    # - Helps control behavior (e.g., debug logs only in development)
+    # environment (Text/String type)
+    # Tells the code if it is running in "development" mode (like on a programmer's laptop)
+    # or "production" mode (active for real users). Defaults to "development".
     environment: str = "development"
 
-    # Database connection URL (PostgreSQL / SQLite)
-    # WHY:
-    # - Required to connect backend to database
-    # - No default → must be provided in .env (important for safety)
+    # database_url (Text/String type)
+    # The address where the database lives.
+    # Note: We do not give it a default value here, which means the app will refuse 
+    # to start unless this parameter is defined in the ".env" file (for safety).
     database_url: str
 
-    # Redis connection URL
-    # WHY:
-    # - Used for caching, background jobs, sessions, etc.
-    # - Again, required → must come from .env
+    # prometheus_url (Text/String type)
+    # The address of the Prometheus server that collects telemetry from Kepler.
+    # Defaults to the docker service hostname "http://prometheus:9090".
+    prometheus_url: str = "http://prometheus:9090"
+
+    # redis_url (Text/String type)
+    # The address of the Redis cache server used to speed up operations.
     redis_url: str
 
-    # Secret key for JWT authentication
-    # WHY:
-    # - Used to sign tokens securely
-    # - MUST NOT be hardcoded → must come from .env for security
+    # jwt_secret_key (Text/String type)
+    # A long, highly secret random string used to encrypt/sign digital session cards (tokens).
+    # It must be provided in the ".env" file.
     jwt_secret_key: str
 
-    # Algorithm used for JWT encoding
-    # WHY:
-    # - Defines how tokens are encrypted
-    # - HS256 is a common and secure default
+    # jwt_algorithm (Text/String type)
+    # The encryption math formula used to secure tokens. Defaults to "HS256".
     jwt_algorithm: str = "HS256"
 
-    # Access token expiry time (in minutes)
-    # WHY:
-    # - Controls how long user stays logged in
-    # - Short expiry improves security
+    # access_token_expire_minutes (Integer/Whole Number type)
+    # How long a login session token remains valid (in minutes) before expiring. Defaults to 30.
     access_token_expire_minutes: int = 30
 
-    # Refresh token expiry (in days)
-    # WHY:
-    # - Used to generate new access tokens without re-login
-    # - Longer expiry for better user experience
+    # refresh_token_expire_days (Integer/Whole Number type)
+    # How long a refresh session token remains valid (in days). Defaults to 7.
     refresh_token_expire_days: int = 7
 
+    # 🔹 Force SQLite Validator Function
+    # This function is marked with "@model_validator(mode='after')" which means it runs
+    # immediately after the settings are loaded from the ".env" file.
+    # Why it exists: Kepler's new setup removed the PostgreSQL server. To make sure the app
+    # works smoothly, this guard checks if the database URL points to PostgreSQL and silently
+    # replaces it with a local SQLite database configuration ("sqlite:///test.db").
+    @model_validator(mode="after")
+    def force_sqlite_url(self) -> "Settings":
+        # Check if the database URL does NOT start with "sqlite" (meaning it probably points to postgresql)
+        if not self.database_url.startswith("sqlite"):
+            # Replace the address with the local SQLite file database "test.db"
+            self.database_url = "sqlite:///test.db"
+        # Return the corrected settings object
+        return self
 
-    # Internal configuration for Pydantic
-    # WHY:
-    # - Controls how environment variables are read
+
+    # 🔹 Config class
+    # This is a special internal configuration block that tells Pydantic how to load variables.
     class Config:
 
-        # Specifies that variables should be loaded from ".env" file
-        # WHY:
-        # - Allows storing secrets/config outside code
-        # - Makes app portable across environments
+        # Specifies that Pydantic should search for a file named ".env" to read configuration values from.
         env_file = ".env"
 
-        # Makes variable names case-insensitive
-        # WHY:
-        # - So DATABASE_URL and database_url both work
-        # - Avoids bugs due to casing mismatch
+        # Makes configuration variable names case-insensitive (e.g. DATABASE_URL and database_url are treated the same).
         case_sensitive = False
 
 
-# Create a single instance of Settings
-# WHY:
-# - This object will be imported everywhere in the app
-# - Ensures config is loaded only once (efficient)
-# - Example usage anywhere:
-#   from backend.core.config import settings
-#   print(settings.database_url)
+# 🔹 Create the Settings Instance
+# Here, we actually build the settings object based on our blueprint above.
+# This variable "settings" is what other files will import to read the configuration.
 settings = Settings()
+
+
+# =====================================================================
+# 🕸️ CONNECTIONS & WORKFLOW (How this file communicates with others):
+# =====================================================================
+# 1. READS FROM:
+#    - ".env" file (located in the project root): Loads raw configuration values.
+#
+# 2. READ BY (CONNECTIONS):
+#    - [connection.py](file:///c:/Users/HP/Downloads/Projects/eco-monitor/backend/db/connection.py):
+#      Reads `settings.database_url` to establish the connection to the database.
+#    - [telemetry_service.py](file:///c:/Users/HP/Downloads/Projects/eco-monitor/backend/services/telemetry_service.py):
+#      Reads `settings.prometheus_url` to know where to execute PromQL telemetry queries.
+#    - [security.py](file:///c:/Users/HP/Downloads/Projects/eco-monitor/backend/core/security.py):
+#      Reads keys and algorithm settings to issue and decode JWT login tokens.
+#    - [main.py](file:///c:/Users/HP/Downloads/Projects/eco-monitor/backend/main.py):
+#      Reads `settings.app_name` to customize the FastAPI app title.
+# =====================================================================
