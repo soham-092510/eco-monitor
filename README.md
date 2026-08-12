@@ -1,4 +1,4 @@
-# 🌱 Eco Monitor System
+# 🌱 Green Finance System
 
 A scalable, highly modular, and production-ready **Carbon Footprint Monitoring & Carbon Credit Management Platform** built using Python (FastAPI), SQLAlchemy ORM, Redis caching, and an observability-first design featuring Kepler energy telemetry, Prometheus, and Grafana dashboards.
 
@@ -19,7 +19,7 @@ A scalable, highly modular, and production-ready **Carbon Footprint Monitoring &
 
 ## 📌 Project Overview
 
-**Eco Monitor** is a professional sustainability ecosystem designed to let organizations log carbon emissions, verify offset actions, manage financial carbon ledgers, and monitor physical energy consumption of computing servers. The platform features:
+**Green Finance** is a professional sustainability ecosystem designed to let organizations log carbon emissions, verify offset actions, manage financial carbon ledgers, and monitor physical energy consumption of computing servers. The platform features:
 
 *   🌍 **Carbon Footprint Tracking**: Accurate Scope 1 (Direct Fuel), Scope 2 (Indirect Electricity/Energy), and Scope 3 (Supply Chain/Agriculture) carbon calculations.
 *   💳 **Carbon Credit Lifecycle**: Claiming, transferring, and retiring carbon credits verified against environmental conservation projects.
